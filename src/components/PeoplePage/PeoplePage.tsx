@@ -3,11 +3,28 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { PeopleFilters } from './PeopleFilters';
-import { Loader } from './Loader';
-import { PeopleTable } from './PeopleTable';
-import { Person } from '../types';
-import { getPeople } from '../api';
+import { PeopleFilters } from '../PeopleFilters';
+import { Loader } from '../Loader';
+import { PeopleTable } from '../PeopleTable';
+import { Person } from '../../types';
+import { getPeople } from '../../api';
+import { PeoplePageTitle } from './PeoplePageTitle';
+
+const aux = { // is the separated file
+  searchParameters: {
+    sex: 'sex',
+    query: 'query',
+    centuries: 'centuries',
+  },
+};
+
+const { // destructure of the impoted file
+  searchParameters: {
+    centuries: centuriesPar,
+    query: queryPar,
+    sex: sexPar,
+  },
+} = aux;
 
 export const PeoplePage = () => {
   const [people, setPeople] = useState<Person[]>([]);
@@ -22,7 +39,7 @@ export const PeoplePage = () => {
 
   console.log('rerender');
 
-  function checkForMatchingCriteria(filtredPeople: Person[]) {
+  function checkForMatchingCriteria(filtredPeople: Person[]) { // use arrow functions
     if (filtredPeople.length === 0) {
       setSearchError(true);
     } else {
@@ -30,11 +47,11 @@ export const PeoplePage = () => {
     }
   }
 
-  function filterPeople() {
-    let filtredPeople = people;
+  function filterPeople(peopleToFilter: Person[]) {
+    let filtredPeople = peopleToFilter;
 
-    if (searchParams.has('query')) {
-      const query = searchParams.get('query')?.toLowerCase() || ''; // typescipt dont defines IF above
+    if (searchParams.has(queryPar)) {
+      const query = searchParams.get(queryPar)?.toLowerCase() || ''; // typescipt dont defines IF above
 
       filtredPeople = filtredPeople.filter(person => {
         return person.name.toLowerCase().includes(query)
@@ -45,16 +62,16 @@ export const PeoplePage = () => {
 
     checkForMatchingCriteria(filtredPeople);
 
-    if (searchParams.has('sex')) {
+    if (searchParams.has(sexPar)) {
       filtredPeople = filtredPeople.filter((person) => {
-        return person.sex === searchParams.get('sex');
+        return person.sex === searchParams.get(sexPar);
       });
     }
 
     checkForMatchingCriteria(filtredPeople);
 
-    if (searchParams.has('centuries')) {
-      const centuries = searchParams.getAll('centuries');
+    if (searchParams.has(centuriesPar)) {
+      const centuries = searchParams.getAll(centuriesPar);
 
       filtredPeople = filtredPeople.filter(person => {
         return centuries.includes((+person.born.toString().slice(0, 2) + 1).toString());
@@ -84,12 +101,9 @@ export const PeoplePage = () => {
   }, []);
 
   useEffect(() => {
-    filterPeople();
-  }, []);
-
-  useEffect(() => {
-    filterPeople();
-  }, [searchParams]);
+    filterPeople(people);
+    //
+  }, [searchParams, people]);
 
   useEffect(() => {
     setSearchError(false);
@@ -97,7 +111,7 @@ export const PeoplePage = () => {
 
   return (
     <>
-      <h1 className="title">People Page</h1>
+      <PeoplePageTitle />
 
       <div className="block">
         <div className="columns is-desktop is-flex-direction-row-reverse">
@@ -128,3 +142,7 @@ export const PeoplePage = () => {
     </>
   );
 };
+
+/**
+ * -> Make components splitting
+ */

@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import { Route, Routes } from 'react-router-dom';
-import { PeoplePage } from './components/PeoplePage';
+import { PeoplePage } from './components/PeoplePage/PeoplePage';
 import { Navbar } from './components/Navbar';
 
 import './App.scss';

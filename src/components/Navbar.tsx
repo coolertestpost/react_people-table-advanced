@@ -2,6 +2,14 @@
 /* eslint-disable no-console */
 import { NavLink, useSearchParams } from 'react-router-dom';
 
+const getNavLinkClassName = ({ isActive }: { isActive: boolean }) => {
+  const isActiveClassName = isActive
+    ? 'has-background-grey-lighter'
+    : '';
+
+  return `navbar-item ${isActiveClassName}`;
+};
+
 export const Navbar = () => {
   const [searchParams] = useSearchParams();
 
@@ -16,7 +24,7 @@ export const Navbar = () => {
         <div className="navbar-brand">
           <NavLink
             to="/"
-            className={({ isActive }) => `navbar-item ${isActive ? 'has-background-grey-lighter' : ''}`}
+            className={getNavLinkClassName}
           >
             Home
           </NavLink>
@@ -25,7 +33,7 @@ export const Navbar = () => {
               pathname: '/people',
               search: searchParams.toString(),
             }}
-            className={({ isActive }) => `navbar-item ${isActive ? 'has-background-grey-lighter' : ''}`}
+            className={getNavLinkClassName}
           >
             People
           </NavLink>
