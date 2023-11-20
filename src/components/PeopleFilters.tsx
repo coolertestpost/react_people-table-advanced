@@ -1,6 +1,3 @@
-/* eslint-disable no-plusplus */
-/* eslint-disable no-console */
-/* eslint-disable max-len */
 import { useSearchParams } from 'react-router-dom';
 import classNames from 'classnames';
 import { getSearchWith } from '../utils/searchHelper';
@@ -8,7 +5,7 @@ import { getSearchWith } from '../utils/searchHelper';
 export const PeopleFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  function checkForSort() {
+  const checkForSort = () => {
     const sortMethod = searchParams.get('sort');
 
     if (searchParams.has('sort') && searchParams.has('order')) {
@@ -20,7 +17,7 @@ export const PeopleFilters = () => {
     }
 
     return '';
-  }
+  };
 
   const checkForSelected = (century: string) => {
     const selectedCenturies = searchParams.getAll('centuries');
@@ -32,7 +29,9 @@ export const PeopleFilters = () => {
     const params = new URLSearchParams(searchParams);
 
     if (params.getAll('centuries').includes(century)) {
-      const newParams = params.getAll('centuries').filter(item => item !== century);
+      const newParams = params.getAll('centuries').filter(item => {
+        return item !== century;
+      });
 
       params.delete('centuries');
       newParams.forEach((param) => {
@@ -205,6 +204,7 @@ export const PeopleFilters = () => {
                 const params = new URLSearchParams(searchParams);
 
                 params.delete('centuries');
+                // eslint-disable-next-line no-plusplus
                 for (let i = 16; i <= 20; i++) {
                   params.append('centuries', `${i}`);
                 }

@@ -1,22 +1,13 @@
-/* eslint-disable no-console */
-/* eslint-disable max-len */
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { PeopleFilters } from '../PeopleFilters';
-import { Loader } from '../Loader';
-import { PeopleTable } from '../PeopleTable';
 import { Person } from '../../types';
 import { getPeople } from '../../api';
-import { PeoplePageTitle } from './PeoplePageTitle';
 
-const aux = { // is the separated file
-  searchParameters: {
-    sex: 'sex',
-    query: 'query',
-    centuries: 'centuries',
-  },
-};
+import { PeoplePageTitle } from './PeoplePageTitle';
+import { PeopleFiltersColumn } from './PeopleFiltersColumn';
+import { PeopleTableColumn } from './PeopleTableColumn';
+import { aux } from './auxObject';
 
 const { // destructure of the impoted file
   searchParameters: {
@@ -25,6 +16,12 @@ const { // destructure of the impoted file
     sex: sexPar,
   },
 } = aux;
+
+interface CheckTargetObjectHasQueryProps {
+  targetObject: Person,
+  targetField: keyof Person,
+  query: string,
+}
 
 export const PeoplePage = () => {
   const [people, setPeople] = useState<Person[]>([]);
@@ -37,57 +34,12 @@ export const PeoplePage = () => {
   const [peopleToDisplay, setPeopleToDisplay] = useState<Person[]>([]);
   const [searchParams] = useSearchParams();
 
-  console.log('rerender');
-
-  function checkForMatchingCriteria(filtredPeople: Person[]) { // use arrow functions
-    if (filtredPeople.length === 0) {
-      setSearchError(true);
-    } else {
-      setSearchError(false);
-    }
-  }
-
-  function filterPeople(peopleToFilter: Person[]) {
-    let filtredPeople = peopleToFilter;
-
-    if (searchParams.has(queryPar)) {
-      const query = searchParams.get(queryPar)?.toLowerCase() || ''; // typescipt dont defines IF above
-
-      filtredPeople = filtredPeople.filter(person => {
-        return person.name.toLowerCase().includes(query)
-          || person.fatherName?.toLowerCase().includes(query)
-          || person.motherName?.toLowerCase().includes(query);
-      });
-    }
-
-    checkForMatchingCriteria(filtredPeople);
-
-    if (searchParams.has(sexPar)) {
-      filtredPeople = filtredPeople.filter((person) => {
-        return person.sex === searchParams.get(sexPar);
-      });
-    }
-
-    checkForMatchingCriteria(filtredPeople);
-
-    if (searchParams.has(centuriesPar)) {
-      const centuries = searchParams.getAll(centuriesPar);
-
-      filtredPeople = filtredPeople.filter(person => {
-        return centuries.includes((+person.born.toString().slice(0, 2) + 1).toString());
-      });
-    }
-
-    checkForMatchingCriteria(filtredPeople);
-    setPeopleToDisplay(filtredPeople);
-  }
-
   useEffect(() => {
     setLoading(true);
     getPeople()
       .then(response => {
         setPeople(response);
-        setPeopleToDisplay(response);
+
         if (!response.length) {
           setNoPeopleOnServer(true);
         }
@@ -100,14 +52,75 @@ export const PeoplePage = () => {
       });
   }, []);
 
-  useEffect(() => {
-    filterPeople(people);
-    //
-  }, [searchParams, people]);
+  useEffect(() => { // filtering people
+    if (!people.length) {
+      return;
+    }
 
-  useEffect(() => {
-    setSearchError(false);
-  }, []);
+    let filteredPeople = people;
+
+    if (searchParams.has(queryPar)) {
+      const query = searchParams.get(queryPar)?.toLowerCase() || '';
+
+      const checkTargetObjectHasQuery = ({
+        targetObject,
+        targetField,
+        query: queryParameter,
+      }: CheckTargetObjectHasQueryProps) => {
+        return String(targetObject[targetField])
+          ?.toLowerCase()
+          .includes(queryParameter);
+      };
+
+      const filterCallback = (person: Person) => {
+        const checkedName = checkTargetObjectHasQuery({
+          query,
+          targetField: 'name',
+          targetObject: person,
+        });
+
+        const checkedFatherName = checkTargetObjectHasQuery({
+          query,
+          targetField: 'fatherName',
+          targetObject: person,
+        });
+
+        const checkedMotherName = checkTargetObjectHasQuery({
+          query,
+          targetField: 'motherName',
+          targetObject: person,
+        });
+
+        return checkedMotherName || checkedFatherName || checkedName;
+      };
+
+      filteredPeople = filteredPeople.filter(filterCallback);
+    }
+
+    if (searchParams.has(sexPar)) {
+      filteredPeople = filteredPeople.filter((person) => {
+        const { sex } = person;
+        const sexSearchParamValue = searchParams.get(sexPar);
+
+        return sex === sexSearchParamValue;
+      });
+    }
+
+    if (searchParams.has(centuriesPar)) {
+      const centuries = searchParams.getAll(centuriesPar);
+
+      filteredPeople = filteredPeople.filter(person => {
+        const personBorn = person.born.toString();
+        const firstTwoNumbersOfPersonBornYear = Number(personBorn.slice(0, 2));
+        const personBornCentury = firstTwoNumbersOfPersonBornYear + 1;
+
+        return centuries.includes(personBornCentury.toString());
+      });
+    }
+
+    setSearchError(!filteredPeople.length);
+    setPeopleToDisplay(filteredPeople);
+  }, [searchParams, people]);
 
   return (
     <>
@@ -116,33 +129,18 @@ export const PeoplePage = () => {
       <div className="block">
         <div className="columns is-desktop is-flex-direction-row-reverse">
 
-          <div className="column is-7-tablet is-narrow-desktop">
-            {!loading && <PeopleFilters />}
-          </div>
+          <PeopleFiltersColumn loading={loading} />
 
-          <div className="column">
-            <div className="box table-container">
-              {loading && <Loader />}
+          <PeopleTableColumn
+            loading={loading}
+            error={error}
+            searchError={searchError}
+            noPeopleOnServer={noPeopleOnServer}
+            {...{ peopleToDisplay }}
+          />
 
-              {error && <p data-cy="peopleLoadingError">Something went wrong</p>}
-
-              {noPeopleOnServer && (
-                <p data-cy="noPeopleMessage">
-                  There are no people on the server
-                </p>
-              )}
-
-              {searchError && <p>There are no people matching the current search criteria</p>}
-
-              {!loading && <PeopleTable {...{ peopleToDisplay }} />}
-            </div>
-          </div>
         </div>
       </div>
     </>
   );
 };
-
-/**
- * -> Make components splitting
- */

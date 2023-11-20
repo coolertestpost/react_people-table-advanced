@@ -1,6 +1,3 @@
-/* eslint-disable max-len */
-/* eslint-disable no-nested-ternary */
-/* eslint-disable no-console */
 import React from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Person } from '../types';
@@ -12,7 +9,7 @@ type Props = {
 export const PeopleTable: React.FC<Props> = ({ peopleToDisplay: people }) => {
   const [searchParams] = useSearchParams();
 
-  function checkForSortMethod(sortingBy: string) {
+  const checkForSortMethod = (sortingBy: string) => {
     const sortMethod = searchParams.get('sort');
 
     if (sortMethod !== sortingBy) {
@@ -28,9 +25,9 @@ export const PeopleTable: React.FC<Props> = ({ peopleToDisplay: people }) => {
     }
 
     return '';
-  }
+  };
 
-  function checkForSortDescending(sortingBy: string) {
+  const checkForSortDescending = (sortingBy: string) => {
     const params = new URLSearchParams(searchParams);
 
     const sortMethod = params.get('sort');
@@ -60,7 +57,7 @@ export const PeopleTable: React.FC<Props> = ({ peopleToDisplay: people }) => {
     }
 
     return params.toString();
-  }
+  };
 
   return (
     <table
@@ -177,6 +174,7 @@ export const PeopleTable: React.FC<Props> = ({ peopleToDisplay: people }) => {
               {person.motherName ? person.motherName : '-'}
             </td>
             <td>
+              {/* eslint-disable-next-line no-nested-ternary */}
               {person.fatherName ? (
                 person.father?.slug ? (
                   <Link
